@@ -13,14 +13,10 @@
 # limitations under the License.
 
 
-output "network" {
-  value = "${module.vpc.network_name}"
+output "names" {
+  value = ["${google_compute_instance.node.*.name}"]
 }
 
-output "subnet" {
-  value = "${element(module.vpc.subnets_names, 0)}"
-}
-
-output "subnet_cidr" {
-  value = "${element(module.vpc.subnets_ips, 0)}"
+output "internal_ips" {
+  value = ["${google_compute_instance.node.*.network_interface.0.network_ip}"]
 }

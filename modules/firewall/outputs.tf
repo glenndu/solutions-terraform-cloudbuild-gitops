@@ -13,6 +13,14 @@
 # limitations under the License.
 
 
-output "firewall_rule" {
-  value = "${google_compute_firewall.allow-http.name}"
+output "internal_rule" {
+  value = "${google_compute_firewall.allow-internal.name}"
+}
+
+output "iap_ssh_rule" {
+  value = "${google_compute_firewall.allow-iap-ssh.name}"
+}
+
+output "iap_k8s_api_rule" {
+  value = "${google_compute_firewall.allow-iap-k8s-api.name}"
 }

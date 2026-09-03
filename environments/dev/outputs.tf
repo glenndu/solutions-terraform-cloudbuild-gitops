@@ -21,14 +21,18 @@ output "subnet" {
   value = "${module.vpc.subnet}"
 }
 
-#output "firewall_rule" {
-#  value = "${module.firewall.firewall_rule}"
-#}
+output "k8s_control_names" {
+  value = "${module.k8s_control.names}"
+}
 
-#output "instance_name" {
-#  value = "${module.http_server.instance_name}"
-#}
+output "k8s_control_internal_ips" {
+  value = "${module.k8s_control.internal_ips}"
+}
 
-#output "external_ip" {
-#  value = "${module.http_server.external_ip}"
-#}
+output "k8s_worker_names" {
+  value = "${module.k8s_workers.names}"
+}
+
+output "k8s_worker_internal_ips" {
+  value = "${module.k8s_workers.internal_ips}"
+}

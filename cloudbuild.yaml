@@ -78,15 +78,27 @@ steps:
 - id: 'tf apply'
   name: 'hashicorp/terraform:1.0.0'
   entrypoint: 'sh'
-  args: 
+  args:
   - '-c'
-  - | 
-      if [ -d "environments/$BRANCH_NAME/" ]; then
-        cd environments/$BRANCH_NAME      
+  - |
+      # _ACTION distinguishes the PR trigger (plan-only, so a bad plan is
+      # visible on the PR review before merge) from the push/merge trigger
+      # (apply). See environments/stage0/main.tf for the trigger definitions --
+      # this substitution defaults to "plan" so a manual/ad-hoc build never
+      # auto-applies by accident.
+      if [ "$_ACTION" != "apply" ]; then
+        echo "*************************** SKIPPING APPLY ***************************"
+        echo "_ACTION='$_ACTION', not 'apply' -- this build only ran plan."
+        echo "************************************************************************"
+      elif [ -d "environments/$BRANCH_NAME/" ]; then
+        cd environments/$BRANCH_NAME
         terraform apply -auto-approve
       else
         echo "***************************** SKIPPING APPLYING *******************************"
         echo "Branch '$BRANCH_NAME' does not represent an official environment."
         echo "*******************************************************************************"
       fi
-# [END tf-apply]      
+# [END tf-apply]
+
+substitutions:
+  _ACTION: 'plan'

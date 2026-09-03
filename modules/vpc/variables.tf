@@ -15,3 +15,7 @@
 
 variable "project" {}
 variable "env" {}
+
+variable "region" {
+  default = "europe-north2"
+}

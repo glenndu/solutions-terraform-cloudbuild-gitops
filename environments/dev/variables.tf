@@ -14,3 +14,8 @@
 
 
 variable "project" {}
+
+# Sized per-environment in terraform.tfvars: dev stays cheap (POC, no real
+# workload capacity needed) while prod would size up for actual etcd/pod load.
+variable "control_machine_type" {}
+variable "worker_machine_type" {}

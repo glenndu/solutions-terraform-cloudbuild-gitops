@@ -13,20 +13,64 @@
 # limitations under the License.
 
 
-locals {
-  network = "${element(split("-", var.subnet), 0)}"
-}
-
-resource "google_compute_firewall" "allow-http" {
-  name    = "${local.network}-allow-http"
-  network = "${local.network}"
+# Cluster-internal traffic: nodes talk to each other on any protocol/port
+# (etcd, kubelet, CNI overlay, NodePort range, etc.) within the subnet.
+# Full port range rather than an itemized list: k8s/CNI traffic isn't
+# confined to a fixed port set, and this rule is already scoped to
+# source_ranges = subnet_cidr, so opening it wide only matters for traffic
+# already inside the VPC.
+resource "google_compute_firewall" "allow-internal" {
+  name    = "${var.network}-allow-internal"
+  network = "${var.network}"
   project = "${var.project}"
 
   allow {
     protocol = "tcp"
-    ports    = ["80"]
+    ports    = ["0-65535"]
   }
 
-  target_tags   = ["http-server2"]
-  source_ranges = ["0.0.0.0/0"]
+  allow {
+    protocol = "udp"
+    ports    = ["0-65535"]
+  }
+
+  allow {
+    protocol = "icmp"
+  }
+
+  source_ranges = ["${var.subnet_cidr}"]
+  target_tags   = ["${var.node_tag}"]
+}
+
+# SSH via IAP TCP forwarding (e.g. gcloud compute ssh --tunnel-through-iap
+# from Cloud Shell) instead of a public 0.0.0.0/0 rule. No external IPs
+# are needed on the nodes for this to work.
+resource "google_compute_firewall" "allow-iap-ssh" {
+  name    = "${var.network}-allow-iap-ssh"
+  network = "${var.network}"
+  project = "${var.project}"
+
+  allow {
+    protocol = "tcp"
+    ports    = ["22"]
+  }
+
+  source_ranges = ["${var.iap_source_range}"]
+  target_tags   = ["${var.node_tag}"]
+}
+
+# kube-apiserver access via an IAP tunnel to a control-plane node
+# (e.g. gcloud compute start-iap-tunnel ... --local-host-port=localhost:6443).
+resource "google_compute_firewall" "allow-iap-k8s-api" {
+  name    = "${var.network}-allow-iap-k8s-api"
+  network = "${var.network}"
+  project = "${var.project}"
+
+  allow {
+    protocol = "tcp"
+    ports    = ["6443"]
+  }
+
+  source_ranges = ["${var.iap_source_range}"]
+  target_tags   = ["${var.control_tag}"]
 }
