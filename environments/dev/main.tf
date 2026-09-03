@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 locals {
   env = "dev"
 }
@@ -84,3 +85,4 @@ module "k8s_workers" {
   control_endpoint = "${local.env}-k8s-control-0"
   join_bucket       = "${google_storage_bucket.k8s_bootstrap.name}"
 }
+
