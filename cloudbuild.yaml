@@ -102,3 +102,10 @@ steps:
 
 substitutions:
   _ACTION: 'plan'
+
+options:
+  # Required whenever build.service_account is set (see the trigger
+  # definitions in environments/stage0/main.tf) -- a custom service account
+  # can't use the legacy GCS-logs-bucket default, so logs go to Cloud
+  # Logging only instead of also trying to write to a bucket.
+  logging: CLOUD_LOGGING_ONLY
