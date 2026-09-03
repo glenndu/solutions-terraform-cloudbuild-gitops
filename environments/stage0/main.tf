@@ -90,6 +90,18 @@ locals {
   cloudbuild_connection_id = "projects/${var.project}/locations/${var.region}/connections/${var.cloudbuild_connection_name}"
 }
 
+# 2nd-gen triggers (repository_event_config) require an explicit
+# service_account -- unlike the classic github{} trigger, there's no
+# implicit legacy-default fallback, and omitting it fails with an opaque
+# "Request contains an invalid argument" 400 from the Cloud Build API.
+data "google_project" "current" {
+  project_id = "${var.project}"
+}
+
+locals {
+  cloudbuild_service_account = "projects/${var.project}/serviceAccounts/${data.google_project.current.number}@cloudbuild.gserviceaccount.com"
+}
+
 # One v2 repository registration, shared by all 4 triggers below -- the
 # connection (created manually, see PREREQUISITE) can host many repos, but
 # this pipeline only ever builds this one.
@@ -108,8 +120,9 @@ resource "google_cloudbuildv2_repository" "repo" {
 resource "google_cloudbuild_trigger" "dev_plan" {
   name     = "dev-plan"
   project  = "${var.project}"
-  location = "${var.region}"
-  filename = "cloudbuild.yaml"
+  location        = "${var.region}"
+  filename        = "cloudbuild.yaml"
+  service_account = "${local.cloudbuild_service_account}"
 
   repository_event_config {
     repository = "${google_cloudbuildv2_repository.repo.id}"
@@ -132,8 +145,9 @@ resource "google_cloudbuild_trigger" "dev_plan" {
 resource "google_cloudbuild_trigger" "dev_apply" {
   name     = "dev-apply"
   project  = "${var.project}"
-  location = "${var.region}"
-  filename = "cloudbuild.yaml"
+  location        = "${var.region}"
+  filename        = "cloudbuild.yaml"
+  service_account = "${local.cloudbuild_service_account}"
 
   repository_event_config {
     repository = "${google_cloudbuildv2_repository.repo.id}"
@@ -153,8 +167,9 @@ resource "google_cloudbuild_trigger" "dev_apply" {
 resource "google_cloudbuild_trigger" "prod_plan" {
   name     = "prod-plan"
   project  = "${var.project}"
-  location = "${var.region}"
-  filename = "cloudbuild.yaml"
+  location        = "${var.region}"
+  filename        = "cloudbuild.yaml"
+  service_account = "${local.cloudbuild_service_account}"
 
   repository_event_config {
     repository = "${google_cloudbuildv2_repository.repo.id}"
@@ -175,8 +190,9 @@ resource "google_cloudbuild_trigger" "prod_plan" {
 resource "google_cloudbuild_trigger" "prod_apply" {
   name     = "prod-apply"
   project  = "${var.project}"
-  location = "${var.region}"
-  filename = "cloudbuild.yaml"
+  location        = "${var.region}"
+  filename        = "cloudbuild.yaml"
+  service_account = "${local.cloudbuild_service_account}"
 
   repository_event_config {
     repository = "${google_cloudbuildv2_repository.repo.id}"
