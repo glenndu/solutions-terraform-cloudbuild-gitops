@@ -34,7 +34,12 @@ variable "machine_type" {
 }
 
 variable "zone" {
-  default = "europe-north2-a"
+  # europe-north2-a AND -b both hit ZONE_RESOURCE_POOL_EXHAUSTED on real
+  # apply attempts -- trying -c next. Transient GCP capacity issue, not a
+  # config bug; if -c also runs out, this region may just be capacity-
+  # constrained for these machine types right now and worth retrying later
+  # or switching region.
+  default = "europe-north2-c"
 }
 
 variable "image" {

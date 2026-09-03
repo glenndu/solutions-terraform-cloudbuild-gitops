@@ -25,7 +25,7 @@ steps:
       echo "***********************"
 
 - id: 'tf init'
-  name: 'hashicorp/terraform:1.0.0'
+  name: 'hashicorp/terraform:1.16.0'
   entrypoint: 'sh'
   args: 
   - '-c'
@@ -50,7 +50,7 @@ steps:
 
 # [START tf-plan]
 - id: 'tf plan'
-  name: 'hashicorp/terraform:1.0.0'
+  name: 'hashicorp/terraform:1.16.0'
   entrypoint: 'sh'
   args: 
   - '-c'
@@ -76,7 +76,7 @@ steps:
 
 # [START tf-apply]
 - id: 'tf apply'
-  name: 'hashicorp/terraform:1.0.0'
+  name: 'hashicorp/terraform:1.16.0'
   entrypoint: 'sh'
   args:
   - '-c'
@@ -102,3 +102,10 @@ steps:
 
 substitutions:
   _ACTION: 'plan'
+
+options:
+  # Required whenever build.service_account is set (see the trigger
+  # definitions in environments/stage0/main.tf) -- a custom service account
+  # can't use the legacy GCS-logs-bucket default, so logs go to Cloud
+  # Logging only instead of also trying to write to a bucket.
+  logging: CLOUD_LOGGING_ONLY
