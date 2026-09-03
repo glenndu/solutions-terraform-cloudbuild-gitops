@@ -90,16 +90,40 @@ locals {
   cloudbuild_connection_id = "projects/${var.project}/locations/${var.region}/connections/${var.cloudbuild_connection_name}"
 }
 
-# 2nd-gen triggers (repository_event_config) require an explicit
-# service_account -- unlike the classic github{} trigger, there's no
-# implicit legacy-default fallback, and omitting it fails with an opaque
-# "Request contains an invalid argument" 400 from the Cloud Build API.
-data "google_project" "current" {
-  project_id = "${var.project}"
+# 2nd-gen triggers (repository_event_config) require an explicit,
+# user-managed service_account -- the legacy default
+# @cloudbuild.gserviceaccount.com account is rejected at build-run time
+# ("provide a user-managed service account or leave unset"), even though
+# the trigger *create* call accepts it. Hence a real, purpose-built SA here.
+resource "google_service_account" "cloudbuild_terraform" {
+  project      = "${var.project}"
+  account_id   = "cloudbuild-terraform"
+  display_name = "Cloud Build - terraform apply (dev/prod)"
+}
+
+# Least privilege for what environments/dev's `terraform apply` actually
+# creates -- not a broad Editor/Owner grant. Extend this if dev/prod start
+# provisioning other resource types.
+locals {
+  cloudbuild_terraform_roles = {
+    "roles/cloudbuild.builds.builder" = "run builds at all -- required for any user-managed build SA"
+    "roles/logging.logWriter"         = "write build logs"
+    "roles/compute.networkAdmin"      = "VPC, subnet, Cloud Router, Cloud NAT, firewall rules (modules/vpc, modules/firewall)"
+    "roles/compute.instanceAdmin.v1"  = "the k8s compute instances (modules/compute_node)"
+    "roles/storage.admin"             = "the join-coordination GCS bucket (environments/dev/main.tf)"
+    "roles/iam.serviceAccountUser"    = "attach the default Compute Engine SA to instances (compute_node's cloud-platform scope)"
+  }
+}
+
+resource "google_project_iam_member" "cloudbuild_terraform" {
+  for_each = "${local.cloudbuild_terraform_roles}"
+  project  = "${var.project}"
+  role     = "${each.key}"
+  member   = "serviceAccount:${google_service_account.cloudbuild_terraform.email}"
 }
 
 locals {
-  cloudbuild_service_account = "projects/${var.project}/serviceAccounts/${data.google_project.current.number}@cloudbuild.gserviceaccount.com"
+  cloudbuild_service_account = "projects/${var.project}/serviceAccounts/${google_service_account.cloudbuild_terraform.email}"
 }
 
 # One v2 repository registration, shared by all 4 triggers below -- the
