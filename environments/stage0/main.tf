@@ -108,7 +108,8 @@ locals {
   cloudbuild_terraform_roles = {
     "roles/cloudbuild.builds.builder" = "run builds at all -- required for any user-managed build SA"
     "roles/logging.logWriter"         = "write build logs"
-    "roles/compute.networkAdmin"      = "VPC, subnet, Cloud Router, Cloud NAT, firewall rules (modules/vpc, modules/firewall)"
+    "roles/compute.networkAdmin"      = "VPC, subnet, Cloud Router, Cloud NAT (modules/vpc)"
+    "roles/compute.securityAdmin"     = "firewall rules (modules/firewall) -- networkAdmin explicitly excludes these"
     "roles/compute.instanceAdmin.v1"  = "the k8s compute instances (modules/compute_node)"
     "roles/storage.admin"             = "the join-coordination GCS bucket (environments/dev/main.tf)"
     "roles/iam.serviceAccountUser"    = "attach the default Compute Engine SA to instances (compute_node's cloud-platform scope)"
