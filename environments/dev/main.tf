@@ -25,6 +25,7 @@ module "vpc" {
   source  = "../../modules/vpc"
   project = "${var.project}"
   env     = "${local.env}"
+  region  = "${var.region}"
 }
 
 module "firewall" {
@@ -43,7 +44,7 @@ module "firewall" {
 resource "google_storage_bucket" "k8s_bootstrap" {
   name                        = "${var.project}-${local.env}-k8s-bootstrap"
   project                     = "${var.project}"
-  location                    = "europe-north2"
+  location                    = "${var.region}"
   uniform_bucket_level_access = true
   force_destroy               = true
 }
@@ -59,6 +60,7 @@ module "k8s_control" {
   # 1 node failure without losing quorum.
   instance_count = 3
   machine_type   = "${var.control_machine_type}"
+  zone           = "${var.zone}"
 
   # GCE-internal DNS hostname of control-0 -- see the bootstrap template
   # for why this isn't a real HA load-balanced endpoint yet.
@@ -76,6 +78,7 @@ module "k8s_workers" {
   # No quorum constraint for workers -- 2 is just enough to test pod
   # scheduling/eviction across nodes.
   instance_count = 2
+  zone           = "${var.zone}"
 
   # Sized per-environment (see variables.tf/terraform.tfvars) rather than
   # hardcoded here: dev stays cheap since it's a POC with no real workload

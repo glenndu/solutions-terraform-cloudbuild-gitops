@@ -19,3 +19,10 @@ variable "project" {}
 # workload capacity needed) while prod would size up for actual etcd/pod load.
 variable "control_machine_type" {}
 variable "worker_machine_type" {}
+
+# Parameterized rather than hardcoded in modules/vpc and modules/compute_node
+# so a capacity-constrained region (europe-north2 hit
+# ZONE_RESOURCE_POOL_EXHAUSTED in all 3 zones for e2-family machines) can be
+# swapped via terraform.tfvars without touching module code.
+variable "region" {}
+variable "zone" {}
