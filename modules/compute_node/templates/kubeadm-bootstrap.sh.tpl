@@ -1,6 +1,18 @@
 #!/bin/bash
 set -euo pipefail
 
+# GCE re-runs metadata_startup_script on every boot, not just the first --
+# without this guard, a reboot after the node has already joined the
+# cluster would re-run kubeadm init/join, which isn't idempotent (init
+# fails on an already-initialized node; join can disrupt an existing
+# membership). Delete this marker manually if you ever want to force a
+# real re-run.
+MARKER=/var/lib/k8s-bootstrap-complete
+if [ -f "$MARKER" ]; then
+  echo "k8s bootstrap already completed ($(cat "$MARKER")); skipping. Delete $MARKER to force a re-run."
+  exit 0
+fi
+
 # ---- common node prep (control-plane and worker alike) ----
 
 # kubeadm's preflight checks refuse to start kubelet with swap enabled.
@@ -114,3 +126,7 @@ until gsutil cp "$BUCKET/worker-join.sh" /tmp/worker-join.sh; do
 done
 bash /tmp/worker-join.sh
 %{ endif }
+
+# Only reached if every step above succeeded (set -e) -- see the MARKER
+# guard at the top of this script.
+echo "role=${role} node_index=${node_index} completed=$(date -u +%FT%TZ)" > "$MARKER"
