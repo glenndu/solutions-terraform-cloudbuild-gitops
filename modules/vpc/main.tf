@@ -22,8 +22,16 @@ module "vpc" {
 
   subnets = [
     {
-      subnet_name   = "${var.env}-subnet-01"
-      subnet_ip     = "10.${var.env == "dev" ? 10 : 20}.10.0/24"
+      subnet_name = "${var.env}-subnet-01"
+
+      # Distinct from the old europe-north2 subnet's 10.10.10.0/24 (still in
+      # state as of the region migration) -- this module keys subnets by
+      # region/name, so a region change creates a new subnet rather than
+      # moving the old one, and GCP rejects overlapping CIDRs across
+      # subnets in the same VPC regardless of region or create/destroy
+      # ordering. Picking a non-overlapping range sidesteps that race
+      # entirely instead of relying on destroy-before-create ordering.
+      subnet_ip     = "10.${var.env == "dev" ? 11 : 20}.10.0/24"
       subnet_region = "${var.region}"
 
       # Lets nodes without an external IP reach Google APIs (e.g. the
