@@ -26,3 +26,9 @@ variable "worker_machine_type" {}
 # swapped via terraform.tfvars without touching module code.
 variable "region" {}
 variable "zone" {}
+
+# Overridable per-environment: prod would set this to 3+ for etcd quorum,
+# but a POC dev cluster doesn't need HA on the control plane.
+variable "control_count" {
+  default = 1
+}

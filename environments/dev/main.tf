@@ -56,9 +56,9 @@ module "k8s_control" {
   subnet  = "${module.vpc.subnet}"
   role    = "k8s-control"
 
-  # etcd needs an odd number of members >= 3 for quorum/HA; 3 tolerates
-  # 1 node failure without losing quorum.
-  instance_count = 3
+  # etcd needs an odd number of members >= 3 for quorum/HA; dev runs a
+  # single control-plane node since this is a POC with no HA requirement.
+  instance_count = "${var.control_count}"
   machine_type   = "${var.control_machine_type}"
   zone           = "${var.zone}"
 
