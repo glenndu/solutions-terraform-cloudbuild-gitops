@@ -88,3 +88,4 @@ module "k8s_workers" {
   control_endpoint = "${local.env}-k8s-control-0"
   join_bucket       = "${google_storage_bucket.k8s_bootstrap.name}"
 }
+
