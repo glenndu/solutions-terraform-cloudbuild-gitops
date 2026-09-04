@@ -25,10 +25,19 @@ sysctl --system
 
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
+apt-get install -y apt-transport-https ca-certificates curl gnupg containerd
+
 # google-cloud-cli (gsutil) is how nodes exchange join credentials below --
 # there's no external IP on any node, so a bucket reachable over Google's
-# private API path is the simplest coordination channel available to all of them.
-apt-get install -y apt-transport-https ca-certificates curl gnupg containerd google-cloud-cli
+# private API path is the simplest coordination channel available to all of
+# them. Not in Ubuntu's default apt sources, so add Google's repo first.
+mkdir -p /usr/share/keyrings
+curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg |
+  gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg
+echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" \
+  > /etc/apt/sources.list.d/google-cloud-sdk.list
+apt-get update
+apt-get install -y google-cloud-cli
 
 # containerd defaults to the cgroupfs driver; kubelet defaults to systemd.
 # That mismatch is one of the most common kubeadm preflight failures, so
